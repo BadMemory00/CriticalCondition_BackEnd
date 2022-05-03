@@ -1,10 +1,8 @@
 using CriticalConditionBackend.CriticalConditionExceptions;
-using CriticalConditionBackend.Models;
 using CriticalConditionBackend.Services;
 using CriticalConditionBackend.Utillities;
 using CriticalConditionBackend.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,7 +31,17 @@ builder.Services.AddScoped<ISubUserServices, SubUserServices>();
 
 builder.Services.AddControllers(options =>
     options.Filters.Add(new HttpResponseExceptionFilter()));
-        
+
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("http://localhost:8080").AllowAnyHeader().AllowAnyMethod();
+                      });
+});
+
 //--------------------------------------------------------------------
 
 var app = builder.Build();
@@ -48,6 +56,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthentication();
 
