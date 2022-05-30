@@ -138,6 +138,8 @@ namespace CriticalConditionBackend.Services
                 .Select(x => new DeviceSuperUserFullResponse
                 {
                     Id = x.Id,
+                    Name= x.Name,
+                    Model= x.Model,
                     TypeOfService = x.TypeOfService,
                     UtilizationRate = DeviceUtilities.UtilizationRateString(x),
                     Unavailability = DeviceUtilities.UnavailabilityString(x),

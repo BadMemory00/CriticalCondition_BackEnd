@@ -5,6 +5,8 @@ namespace CriticalConditionBackend.Models.DTOs
     public class DeviceSuperUserFullResponse
     {
         public Guid Id { get; set; }
+        public string Name { get; set; }
+        public string Model { get; set; }
         public string TypeOfService { get; set; }
         public string UtilizationRate { get; set; }
         public string Unavailability { get; set; }
