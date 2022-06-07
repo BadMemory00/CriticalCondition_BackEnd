@@ -150,7 +150,10 @@ namespace CriticalConditionBackend.Services
                     AgeFactor = DeviceUtilities.AgeFactorString(x),
                     FMEARiskScore = x.FMEARiskScore,
                     IsIoT = x.IsIoT,
-                    SecurityRiskScore = x.SecurityRiskScore
+                    SecurityRiskScore = x.SecurityRiskScore,
+                    AddedAt = x.AddedAt,
+                    LastEditBy = EncryptionUtilities.DecryptSubUserCode(x.LastEditBy, _configuration),
+                    LastEditDate = x.LastEditDate,
                 }).ToListAsync();
 
             return devices;

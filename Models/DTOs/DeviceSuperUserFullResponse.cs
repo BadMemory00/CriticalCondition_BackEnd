@@ -18,5 +18,8 @@ namespace CriticalConditionBackend.Models.DTOs
         public int FMEARiskScore { get; set; }
         public bool IsIoT { get; set; }
         public int? SecurityRiskScore { get; set; }
+        public DateTime AddedAt { get; set; }
+        public string LastEditBy { get; set; }
+        public DateTime? LastEditDate { get; set; }
     }
 }
