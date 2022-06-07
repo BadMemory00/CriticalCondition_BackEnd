@@ -39,6 +39,7 @@ builder.Services.AddCors(options =>
                       policy =>
                       {
                           policy.WithOrigins("http://localhost:8080").AllowAnyHeader().AllowAnyMethod();
+                          policy.WithOrigins("https://jolly-wave-0a1368003.1.azurestaticapps.net").AllowAnyHeader().AllowAnyMethod();
                       });
 });
 
