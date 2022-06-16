@@ -102,6 +102,7 @@ namespace CriticalConditionBackend.Services
                 {
                     SubUserUserName = x.SubUserUserName,
                     Action = x.Action,
+                    ActionDate = x.ActionDate,
                     DeviceName = x.DeviceName,
                 }).ToListAsync();
 
@@ -146,7 +147,7 @@ namespace CriticalConditionBackend.Services
                     Safety = x.Safety,
                     Importance = DeviceUtilities.ImportanceString(x),
                     FinancialScore = DeviceUtilities.FinancialScoreString(x),
-                    Detection = x.Detection,
+                    Detection = DeviceUtilities.DetectionString(x),
                     AgeFactor = DeviceUtilities.AgeFactorString(x),
                     FMEARiskScore = x.FMEARiskScore,
                     IsIoT = x.IsIoT,
@@ -158,6 +159,61 @@ namespace CriticalConditionBackend.Services
 
             return devices;
         }
+
+        public async Task<bool> UnArchiveDeviceAsync(string token, DeviceArchiveAndUnarchiveAndDeleteRequest deviceUnarchiveRequest)
+        {
+            string superUserEmail = ValidateTokenAndReturnSuperUserEmail(token);
+
+            Device? archivedDevice = await ValidateAndReturnDeviceAsync(deviceUnarchiveRequest, superUserEmail);
+
+            archivedDevice.IsArchived = false;
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> DeleteDeviceAsync(string token, DeviceArchiveAndUnarchiveAndDeleteRequest deviceDeleteRequest)
+        {
+            string superUserEmail = ValidateTokenAndReturnSuperUserEmail(token);
+
+            var deviceToDelete = await ValidateAndReturnDeviceAsync(deviceDeleteRequest, superUserEmail);
+
+            _dbContext.Devices.Remove(deviceToDelete);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> DeleteSubUserAsync(string token, SubUserDeleteRequest subUserDeleteRequest)
+        {
+            string superUserEmail = ValidateTokenAndReturnSuperUserEmail(token);
+
+            SubUser? subUserToDelete = await ValidateAndReturnSubUserAsync(subUserDeleteRequest.Code, superUserEmail);
+
+            _dbContext.SubUsers.Remove(subUserToDelete);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> EditSubUserAsync(string token, SubUserEditRequest subUserEditRequest)
+        {
+            string superUserEmail = ValidateTokenAndReturnSuperUserEmail(token);
+
+            var subUserToEdit = await ValidateAndReturnSubUserAsync(subUserEditRequest.Code, superUserEmail);
+
+            subUserToEdit.UserName = subUserEditRequest.UserName;
+            subUserToEdit.Role = subUserEditRequest.Role;
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
+
+
         private static SuperUserResponse FillSuperUserResponseData(SuperUser model) => new()
         {
             Email = model.Email,
@@ -187,6 +243,39 @@ namespace CriticalConditionBackend.Services
             IsDataShareProgramMember = false,
             ExcludedDevicesNumber = 0
         };
+        private async Task<Device> ValidateAndReturnDeviceAsync(DeviceArchiveAndUnarchiveAndDeleteRequest deviceUnarchiveRequest, string superUserEmail)
+        {
+            var device = await _dbContext.Devices.FindAsync(deviceUnarchiveRequest.DeviceId);
+
+            if (device is null)
+            {
+                throw new LogicalException(CriticalConditionExceptionsEnum.DEVICE_WAS_NOT_FOUND, 404);
+            }
+            if (device.SuperUserEmail != superUserEmail)
+            {
+                throw new LogicalException(CriticalConditionExceptionsEnum.NOT_AUTHORIZED_TO_EDIT_DEVICE, 401);
+            }
+
+            return device;
+        }
+        private async Task<SubUser> ValidateAndReturnSubUserAsync(string code, string superUserEmail)
+        {
+            // i sent the sub-user code in the decrypted form, so i have to re-encrypt it to search for it in the database
+            var encryptedCode = EncryptionUtilities.EncryptSubUserCode(code, _configuration);
+
+            var subUser = await _dbContext.SubUsers.FindAsync(encryptedCode);
+
+            if (subUser is null)
+            {
+                throw new LogicalException(CriticalConditionExceptionsEnum.SUB_USER_DOES_NOT_EXIST, 404);
+            }
+            if (subUser.SuperUserEmail != superUserEmail)
+            {
+                throw new LogicalException(CriticalConditionExceptionsEnum.NOT_AUTHORIZED_TO_DELETE_SUB_USER, 401);
+            }
+
+            return subUser;
+        }
         private static List<Claim> AddSuperUserClaims(SuperUser user) => new()
         {
             new Claim(ClaimTypes.Email, user.Email),

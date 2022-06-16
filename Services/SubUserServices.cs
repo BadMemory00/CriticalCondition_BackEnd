@@ -144,6 +144,7 @@ namespace CriticalConditionBackend.Services
         {
             Id = Guid.NewGuid(),
             Action = action,
+            ActionDate = DateTime.Now,
             DeviceName = device.Name,
             DeviceId = device.Id,
             SubUserUserName = subUser.UserName,

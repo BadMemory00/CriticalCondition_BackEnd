@@ -6,6 +6,7 @@ namespace CriticalConditionBackend.Models
     {
         public Guid Id { get; set; }
         public string Action { get; set; }
+        public DateTime ActionDate { get; set; }
         public string DeviceName { get; set; }
         public Guid DeviceId { get; set; }
         public string SubUserUserName { get; set; }

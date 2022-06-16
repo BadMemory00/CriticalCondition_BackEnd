@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace CriticalConditionBackend.Models.DTOs
+﻿namespace CriticalConditionBackend.Models.DTOs
 {
     public class SuperUserResponse
     {

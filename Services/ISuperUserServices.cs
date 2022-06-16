@@ -15,6 +15,9 @@ namespace CriticalConditionBackend.Services
         public Task<List<EditsLogResponse>> GetEditsLogAsync(string token);
         public Task<List<DeviceSuperUserSmallResponse>> GetAllDevicesSmallCardAsync(string token);
         public Task<List<DeviceSuperUserFullResponse>> GetAllDevicesFullCardAsync(string token, bool IsArchived);
-
+        public Task<bool> UnArchiveDeviceAsync(string token, DeviceArchiveAndUnarchiveAndDeleteRequest deviceUnarchiveRequest);
+        public Task<bool> DeleteDeviceAsync(string token, DeviceArchiveAndUnarchiveAndDeleteRequest deviceDeleteRequest);
+        public Task<bool> DeleteSubUserAsync(string token, SubUserDeleteRequest subUserDeleteRequest);
+        public Task<bool> EditSubUserAsync(string token, SubUserEditRequest subUserEditRequest);
     }
 }

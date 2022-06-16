@@ -73,6 +73,18 @@ namespace CriticalConditionBackend.Utillities
                 _ => "Not Calculated"
             };
         }
+        public static string DetectionString(Device model)
+        {
+            return model.Detection switch
+            {
+                "NoChance" => "No Chance",
+                "LowChance" => "Low Chance",
+                "ModerateChance" => "Moderate Chance",
+                "HighChance" => "High Chance",
+                "EasyToDetect" => "Easy to Detect",
+                _ => "Not Calculated"
+            };
+        }
         private static int UtilizationRate(Device model)
         {
             if ((model.NumberOfWorkingDays / 365f) * 100 >= 80) return 5;

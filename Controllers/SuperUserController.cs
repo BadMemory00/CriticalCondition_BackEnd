@@ -82,6 +82,7 @@ namespace CriticalConditionBackend.Controllers
 
             return Ok(devices);
         }
+
         [HttpGet]
         [Route("devices")]
         public async Task<IActionResult> GetAllDevicesFullCard([FromHeader] string Authorization, [FromQuery(Name = "IsArchived")] bool IsArchived)
@@ -89,6 +90,41 @@ namespace CriticalConditionBackend.Controllers
             var devices = await _superUserServices.GetAllDevicesFullCardAsync(Authorization, IsArchived);
 
             return Ok(devices);
+        }
+
+        [HttpPost]
+        [Route("devices/unarchive")]
+        public async Task<IActionResult> UnArchiveDevice([FromHeader] string Authorization, [FromBody] DeviceArchiveAndUnarchiveAndDeleteRequest deviceUnarchiveRequest)
+        {
+            await _superUserServices.UnArchiveDeviceAsync(Authorization, deviceUnarchiveRequest);
+
+            return Ok("Device Unarchived!");
+        }
+
+        [HttpPost]
+        [Route("devices/delete")]
+        public async Task<IActionResult> DeleteDevice([FromHeader] string Authorization, [FromBody] DeviceArchiveAndUnarchiveAndDeleteRequest deviceDeleteRequest)
+        {
+            await _superUserServices.DeleteDeviceAsync(Authorization, deviceDeleteRequest);
+
+            return Ok("Device Deleted!");
+        }
+
+        [HttpPost]
+        [Route("subusers/delete")]
+        public async Task<IActionResult> DeleteSubUser([FromHeader] string Authorization, [FromBody] SubUserDeleteRequest subUserDeleteRequest)
+        {
+            await _superUserServices.DeleteSubUserAsync(Authorization, subUserDeleteRequest);
+
+            return Ok("SubUser Deleted!");
+        }
+        [HttpPost]
+        [Route("subusers/edit")]
+        public async Task<IActionResult> EditSubUser([FromHeader] string Authorization, [FromBody] SubUserEditRequest subUserEditRequest)
+        {
+            await _superUserServices.EditSubUserAsync(Authorization, subUserEditRequest);
+
+            return Ok("SubUser Edited!");
         }
     }
 }
