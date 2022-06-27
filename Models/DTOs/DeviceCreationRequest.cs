@@ -4,7 +4,7 @@ using CriticalConditionBackend.Validations;
 
 namespace CriticalConditionBackend.Models.DTOs
 {
-    public class DeviceCreation
+    public class DeviceCreationRequest
     {
         [Required(ErrorMessage = "Device Name is Required")]
         public string Name { get; set; }

@@ -23,7 +23,7 @@ namespace CriticalConditionBackend.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("login")]
-        public async Task<IActionResult> Login([FromBody] SubUserLogin model)
+        public async Task<IActionResult> Login([FromBody] SubUserLoginRequest model)
         {
             var token = await _subUserServices.LoginAsync(model);
 
@@ -32,8 +32,8 @@ namespace CriticalConditionBackend.Controllers
 
         [Authorize(Roles = CriticalConditionUserRoles.Operator)]
         [HttpPost]
-        [Route("adddevice")]
-        public async Task<IActionResult> AddDevice([FromHeader] string Authorization, [FromBody] DeviceCreation model)
+        [Route("device/add")]
+        public async Task<IActionResult> AddDevice([FromHeader] string Authorization, [FromBody] DeviceCreationRequest model)
         {
             await _subUserServices.AddDeviceAsync(Authorization, model);
 
@@ -56,6 +56,42 @@ namespace CriticalConditionBackend.Controllers
             var device = await _subUserServices.GetDeviceByIdAsync(Authorization, deviceId);
 
             return Ok(device);
+        }
+
+        [HttpGet]
+        [Route("isoperator")]
+        public async Task<IActionResult> CheckIfOperator([FromHeader] string Authorization)
+        {
+            var isOP = await _subUserServices.CheckIfOperatorAsync(Authorization);
+
+            return Ok(isOP);
+        }
+
+        [HttpPost]
+        [Route("device/quickedit")]
+        public async Task<IActionResult> DeviceQuickEdit([FromHeader] string Authorization, DeviceQuickEditRequest deviceQuickEditRequest)
+        {
+            await _subUserServices.DeviceQuickEditAsync(Authorization, deviceQuickEditRequest);
+
+            return Ok("Device Quick Eddited!");
+        }
+
+        [HttpPost]
+        [Route("device/edit")]
+        public async Task<IActionResult> DeviceEdit([FromHeader] string Authorization, DeviceEditRequest deviceEditRequest)
+        {
+            await _subUserServices.DeviceEditAsync(Authorization, deviceEditRequest);
+
+            return Ok("Device Eddited!");
+        }
+
+        [HttpPost]
+        [Route("device/archive")]
+        public async Task<IActionResult> DeviceArchive([FromHeader] string Authorization, DeviceArchiveAndUnarchiveAndDeleteRequest deviceArchiveRequest)
+        {
+            await _subUserServices.DeviceArchiveAsync(Authorization, deviceArchiveRequest);
+
+            return Ok("Device Archived!");
         }
     }
 }

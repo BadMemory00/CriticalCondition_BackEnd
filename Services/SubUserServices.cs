@@ -23,7 +23,7 @@ namespace CriticalConditionBackend.Services
 
         private const string SUBUSERCODECLAIM = "SubUserCode";
 
-        public async Task<string> LoginAsync(SubUserLogin model)
+        public async Task<string> LoginAsync(SubUserLoginRequest model)
         {
             var hashedCode = EncryptionUtilities.EncryptSubUserCode(model.Code, _configuration);
 
@@ -37,7 +37,7 @@ namespace CriticalConditionBackend.Services
             return TokenUtilities.CreateToken(_configuration, authClaims);
         }
 
-        public async Task<Device> AddDeviceAsync(string token, DeviceCreation model)
+        public async Task<Device> AddDeviceAsync(string token, DeviceCreationRequest model)
         {
             var subUser = await ValidateTokenAndReturnSubUser(token);
 
@@ -91,6 +91,85 @@ namespace CriticalConditionBackend.Services
             return devices;
         }
 
+        public async Task<bool> CheckIfOperatorAsync(string token)
+        {
+            var subUser = await ValidateTokenAndReturnSubUser(token);
+
+            if (subUser.Role == CriticalConditionUserRoles.Operator)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public async Task<bool> DeviceQuickEditAsync(string token, DeviceQuickEditRequest deviceQuickEditRequest)
+        {
+            var subUser = await ValidateTokenAndReturnSubUser(token);
+
+            var device = await _dbContext.Devices.FindAsync(deviceQuickEditRequest.DeviceId);
+            if (device == null)
+                throw new LogicalException(CriticalConditionExceptionsEnum.DEVICE_WAS_NOT_FOUND, 404);
+            if(device.SuperUserEmail != subUser.SuperUserEmail)
+                throw new LogicalException(CriticalConditionExceptionsEnum.NOT_AUTHORIZED_TO_EDIT_DEVICE, 401);
+
+            device.NumberOfFailures = deviceQuickEditRequest.NumberOfFailures;
+            device.DownTime = deviceQuickEditRequest.DownTime;
+            device.FMEARiskScore = DeviceUtilities.CalculateFMEARiskScore(device);
+
+            EditsLog editsLog = AddActionToEditsLog(subUser, device, "Edited");
+            await _dbContext.EditsLogs.AddAsync(editsLog);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> DeviceEditAsync(string token, DeviceEditRequest deviceEditRequest)
+        {
+            var subUser = await ValidateTokenAndReturnSubUser(token);
+
+            var device = await _dbContext.Devices.FindAsync(deviceEditRequest.DeviceId);
+            if (device == null)
+                throw new LogicalException(CriticalConditionExceptionsEnum.DEVICE_WAS_NOT_FOUND, 404);
+            if (device.SuperUserEmail != subUser.SuperUserEmail)
+                throw new LogicalException(CriticalConditionExceptionsEnum.NOT_AUTHORIZED_TO_EDIT_DEVICE, 401);
+            
+            ApplyEditedDeviceData(deviceEditRequest, device);
+            device.FMEARiskScore = DeviceUtilities.CalculateFMEARiskScore(device);
+
+            EditsLog editsLog = AddActionToEditsLog(subUser, device, "Edited");
+            await _dbContext.EditsLogs.AddAsync(editsLog);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> DeviceArchiveAsync(string token, DeviceArchiveAndUnarchiveAndDeleteRequest deviceArchiveRequest)
+        {
+            var subUser = await ValidateTokenAndReturnSubUser(token);
+
+            var device = await _dbContext.Devices.FindAsync(deviceArchiveRequest.DeviceId);
+            if (device == null)
+                throw new LogicalException(CriticalConditionExceptionsEnum.DEVICE_WAS_NOT_FOUND, 404);
+            if (device.SuperUserEmail != subUser.SuperUserEmail)
+                throw new LogicalException(CriticalConditionExceptionsEnum.NOT_AUTHORIZED_TO_EDIT_DEVICE, 401);
+
+            if (device.IsArchived)
+                throw new LogicalException(CriticalConditionExceptionsEnum.DEVICE_ALREADY_ARCHIVED, 400);
+                
+            device.IsArchived = true;
+
+            EditsLog editsLog = AddActionToEditsLog(subUser, device, "Archived");
+            await _dbContext.EditsLogs.AddAsync(editsLog);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
+
+
+
         private static List<Claim> AddSubUserClaimsAsync(SubUser user) => new()
         {
             new Claim(SUBUSERCODECLAIM, user.Code),
@@ -112,7 +191,7 @@ namespace CriticalConditionBackend.Services
             return subUser;
         }
 
-        private static Device FillDeviceData(DeviceCreation model, string subUserCode, string SuperUserEmail) => new()
+        private static Device FillDeviceData(DeviceCreationRequest model, string subUserCode, string SuperUserEmail) => new()
         {
             Id = Guid.NewGuid(),
             Name = model.Name,
@@ -164,7 +243,7 @@ namespace CriticalConditionBackend.Services
             NumberOfFailures = device.NumberOfFailures,
             DownTime = device.DownTime,
             Safety = device.Safety,
-            Function = device.Function,
+            Function = DeviceUtilities.FunctionString(device),
             Area = device.Area,
             ServiceCost = device.ServiceCost,
             OperationCost = device.OperationCost,
@@ -173,5 +252,23 @@ namespace CriticalConditionBackend.Services
             IsIoT = device.IsIoT,
             FMEARiskScore = device.FMEARiskScore
         };
+        private static void ApplyEditedDeviceData(DeviceEditRequest deviceEditRequest, Device device)
+        {
+            device.Name = deviceEditRequest.Name;
+            device.Brand = deviceEditRequest.Brand;
+            device.Model = deviceEditRequest.Model;
+            device.TypeOfService = deviceEditRequest.TypeOfService;
+            device.PurchaseDate = deviceEditRequest.PurchaseDate;
+            device.NumberOfWorkingDays = deviceEditRequest.NumberOfWorkingDays;
+            device.NumberOfFailures = deviceEditRequest.NumberOfFailures;
+            device.DownTime = deviceEditRequest.DownTime;
+            device.Safety = deviceEditRequest.Safety;
+            device.Function = deviceEditRequest.Function;
+            device.Area = deviceEditRequest.Area;
+            device.ServiceCost = deviceEditRequest.ServiceCost;
+            device.OperationCost = deviceEditRequest.OperationCost;
+            device.PurchasingCost = deviceEditRequest.PurchasingCost;
+            device.Detection = deviceEditRequest.Detection;
+        }
     }
 }

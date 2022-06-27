@@ -2,7 +2,7 @@
 
 namespace CriticalConditionBackend.Models.DTOs
 {
-    public class SubUserLogin
+    public class SubUserLoginRequest
     {
         [Required]
         public string Code { get; set; }

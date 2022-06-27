@@ -85,6 +85,18 @@ namespace CriticalConditionBackend.Utillities
                 _ => "Not Calculated"
             };
         }
+        public static string FunctionString(Device model)
+        {
+            return model.Function switch
+            {
+                "LifeSupport" => "Life Support",
+                "Diagnostic" => "Diagnostic",
+                "TherapyAnalysis" => "Therapy Analysis",
+                "Monitoring" => "Monitoring",
+                "Micekkes" => "Micekkes",
+                _ => "Not Calculated"
+            };
+        }
         private static int UtilizationRate(Device model)
         {
             if ((model.NumberOfWorkingDays / 365f) * 100 >= 80) return 5;
